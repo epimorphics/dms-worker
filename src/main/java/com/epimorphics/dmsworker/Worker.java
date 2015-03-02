@@ -9,11 +9,12 @@
 
 package com.epimorphics.dmsworker;
 
-import com.epimorphics.appbase.core.App;
+import com.epimorphics.appbase.core.AppConfig;
 
 public class Worker {
-
+    public static final String CONFIGS="/opt/dms-worker/conf/app.conf,/etc/dms-worker/app.conf";
+    
     public static void main(String[] args) {
-        new QueueManager().startup( new App("test app") );
+        AppConfig.startApp("DMSWorker", CONFIGS);
     }
 }

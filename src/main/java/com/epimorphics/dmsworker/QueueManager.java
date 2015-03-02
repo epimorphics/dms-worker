@@ -29,6 +29,14 @@ import com.epimorphics.appbase.core.App;
 import com.epimorphics.appbase.core.ComponentBase;
 import com.epimorphics.appbase.core.Startup;
 
+/**
+ * Monitor and SQS queue and run the requested tasks using a configurable TaskProcessor
+ * implementation. Can limit the number of concurrent tasks accepted. Each task
+ * is run it its own thread for generality even though ActionManager (if using that)
+ * already runs actions as separate threads.
+ * 
+ * @author <a href="mailto:dave@epimorphics.com">Dave Reynolds</a>
+ */
 public class QueueManager extends ComponentBase implements Startup {
     public static final String ACTION_ATTR = "action";
     public static final String TARGET_ATTR = "target";
@@ -36,10 +44,10 @@ public class QueueManager extends ComponentBase implements Startup {
     static Logger log = LoggerFactory.getLogger( QueueManager.class );
             
     // Configurable
-    protected String queueURL = "https://sqs.eu-west-1.amazonaws.com/853478862498/lds-automation";
+    protected String queueURL;
     protected long taskLimit = 2;
     protected long pollTime = 5;    
-    protected TaskProcessor processor = new TestProcessor();
+    protected TaskProcessor processor;
     
     // Internal
     protected AmazonSQS sqs;
@@ -168,14 +176,15 @@ public class QueueManager extends ComponentBase implements Startup {
         
         @Override
         public void run() {
-            log.info( String.format("Starting task %s(%s) - %s", action, target, message.getMessageId()) );
+            // Logging suppressed here because the ActionManager is already logging
+//            log.info( String.format("Starting task %s(%s) - %s", action, target, message.getMessageId()) );
             try {
                 // At this stage we are committed to handling the task
                 // Alternative would be to make the message invisible for some max period and delete only after completion
                 // However, we don't know to decide when a task should be allow to retry if we fail
                 sqs.deleteMessage(queueURL, message.getReceiptHandle());
-                processor.process(action, target, message.getBody());
-                log.info(  String.format("Completed %s", message.getMessageId()) );
+                processor.process(action, target, message);
+//                log.info(  String.format("Completed %s", message.getMessageId()) );
             } catch (Exception e) {
                 log.error( String.format("Failed to run task: %s", message.getMessageId()), e);
             } finally {
