@@ -9,9 +9,11 @@
 
 package com.epimorphics.dmsworker;
 
+import com.epimorphics.appbase.core.App;
+
 public class Worker {
 
     public static void main(String[] args) {
-        new QueueManager().poll();
+        new QueueManager().startup( new App("test app") );
     }
 }
