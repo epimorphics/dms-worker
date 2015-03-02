@@ -70,6 +70,7 @@ public class ActionProcessor implements TaskProcessor {
                 Writer out = new FileWriterWithEncoding(temp, StandardCharsets.UTF_8);
                 FileUtil.copyResource(in, out);
                 out.close();
+                parameters.put(MESSAGE_FILE_PARAM, temp.getAbsolutePath());
             } catch (IOException e) {
                 throw new EpiException("Failed to create temporary file for message body", e);
             }

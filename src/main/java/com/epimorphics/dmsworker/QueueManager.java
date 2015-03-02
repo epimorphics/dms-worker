@@ -139,6 +139,7 @@ public class QueueManager extends ComponentBase implements Startup {
                         }
                     } else {
                         // Not a request we can handle
+                        log.info( String.format("Skipping request %s(%s), not configured for this worker", action, target) );
                         sqs.changeMessageVisibility(queueURL, message.getReceiptHandle(), (int)pollTime);
                         putBackSome = true;
                     }

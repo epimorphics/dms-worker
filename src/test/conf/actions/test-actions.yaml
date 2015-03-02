@@ -1,0 +1,8 @@
+"@name" : log
+"@javaclass" : com.epimorphics.dmsworker.actions.LogAction
+---
+"@name"   : testFile
+"@type"   : script
+"@script" : "testFile.sh"
+"@args"   : ["messageFile"]
+passByReference : true
