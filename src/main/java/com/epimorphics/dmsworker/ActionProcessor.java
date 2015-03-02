@@ -15,15 +15,22 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.commons.io.output.FileWriterWithEncoding;
 import org.apache.jena.atlas.json.JsonObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.services.sqs.model.Message;
 import com.epimorphics.appbase.tasks.Action;
 import com.epimorphics.appbase.tasks.ActionExecution;
 import com.epimorphics.appbase.tasks.ActionManager;
 import com.epimorphics.json.JsonUtil;
+import com.epimorphics.tasks.ProgressMessage;
+import com.epimorphics.tasks.ProgressMonitor;
+import com.epimorphics.tasks.ProgressMonitorReporter;
+import com.epimorphics.tasks.TaskState;
 import com.epimorphics.util.EpiException;
 import com.epimorphics.util.FileUtil;
 
@@ -42,6 +49,8 @@ public class ActionProcessor implements TaskProcessor {
     public static final String BYREF_PARAM = "passByReference";
     public static final String MESSAGE_FILE_PARAM = "messageFile";
     public static final String MESSAGEID_PARAM = "messageID";
+    
+    static Logger log = LoggerFactory.getLogger( TaskProcessor.class );
     
     protected ActionManager actionManager;
     
@@ -81,12 +90,31 @@ public class ActionProcessor implements TaskProcessor {
             }
         }
         ActionExecution ae = actionManager.runAction(action, parameters);
-        // TODO log progress
+        ProgressMonitorReporter monitor = ae.getMonitor();
+        int messagesSeen = 0;
+        while (monitor.getState() != TaskState.Terminated) {
+            messagesSeen += showProgress(monitor, messagesSeen);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                break;
+            }
+        }
+        showProgress(monitor, messagesSeen);
         ae.waitForCompletion();
-        // TODO report errors if the execution failed?
         if (temp != null) {
             temp.delete();
         }
     }
 
+    private int showProgress(ProgressMonitor monitor, int messagesSeen) {
+        if (monitor.moreMessagesSince(messagesSeen)) {
+            List<ProgressMessage> messages = monitor.getMessagesSince(messagesSeen);
+            for (ProgressMessage m : messages) {
+                log.info( m.getMessage() );
+            }
+            return messages.size();
+        }
+        return 0;
+    }
 }
