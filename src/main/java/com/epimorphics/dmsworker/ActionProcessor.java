@@ -89,6 +89,7 @@ public class ActionProcessor implements TaskProcessor {
                 parameters.put(MESSAGE_PARAM, body);
             }
         }
+        action.resolve(actionManager);
         ActionExecution ae = actionManager.runAction(action, parameters);
         ProgressMonitorReporter monitor = ae.getMonitor();
         int messagesSeen = 0;

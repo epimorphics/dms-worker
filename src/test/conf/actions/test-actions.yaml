@@ -6,6 +6,11 @@
 "@script"    : "testFile.sh"
 "@args"      : ["messageFile"]
 passByReference : true
+"@onError" :
+    "@javaclass" : com.epimorphics.dmsworker.actions.NotifyAction
+    "topicARN"   : "arn:aws:sns:eu-west-1:853478862498:worker_notifications"
+    "target"     : "Test message"
+    "message"    : "Failure in testFile"
 ---
 "@name"      : notify
 "@javaclass" : com.epimorphics.dmsworker.actions.NotifyAction

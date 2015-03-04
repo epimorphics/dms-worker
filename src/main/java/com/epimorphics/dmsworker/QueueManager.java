@@ -138,16 +138,16 @@ public class QueueManager extends ComponentBase implements Startup {
                             taskCount.decrementAndGet();
                         }
                     } else {
-                        // Not a request we can handle
+                        // Not a request we can handle, make it visible
                         log.info( String.format("Skipping request %s(%s), not configured for this worker", action, target) );
-                        sqs.changeMessageVisibility(queueURL, message.getReceiptHandle(), (int)pollTime);
+                        sqs.changeMessageVisibility(queueURL, message.getReceiptHandle(), 0);
                         putBackSome = true;
                     }
                 }
                 if (putBackSome) {
                     try {
                         // We've reject some requests so give others a chance to pick them up
-                        Thread.sleep( pollTime * 1000 );
+                        Thread.sleep( (pollTime + 3) * 1000 );
                     } catch (InterruptedException e) {
                         // Fall back to the outer loop
                     }
