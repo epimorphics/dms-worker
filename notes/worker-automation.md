@@ -30,3 +30,6 @@ In the current design if a task is accepted by a worker but then fails it will n
 
    aws sqs send-message --queue-url https://sqs.eu-west-1.amazonaws.com/853478862498/lds-automation --message-body "I am the message body" --message-attributes '{"action" : {"DataType":"String","StringValue":"notify"}, "target" : {"DataType":"String","StringValue":"Test message"}}'
 
+   dms-job rebuildDataTier /var/opt/dms/services/floods/publicationSets/production/tiers/productionServers s3://dms-deploy/images/flood-monitoring
+
+   dms-job testTier /var/opt/dms/services/floods/publicationSets/production/tiers/productionServers
