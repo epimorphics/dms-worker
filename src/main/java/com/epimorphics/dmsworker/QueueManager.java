@@ -46,7 +46,8 @@ public class QueueManager extends ComponentBase implements Startup {
     // Configurable
     protected String queueURL;
     protected long taskLimit = 2;
-    protected long pollTime = 5;    
+    protected long pollTime = 5;   
+    protected long waitTime = 20;
     protected TaskProcessor processor;
     
     // Internal
@@ -67,7 +68,7 @@ public class QueueManager extends ComponentBase implements Startup {
     @Override
     public void startup(App app) {
         super.startup(app);
-        log.info("Starting queue polling with visibility timeout of " + pollTime + "s");
+        log.info("Starting queue polling with visibility timeout of " + pollTime + "s and waitTime of" + waitTime + "s");
         executor.execute( new Poller() );
     }
     
@@ -109,6 +110,16 @@ public class QueueManager extends ComponentBase implements Startup {
     }
     
     /**
+     * The wait time for long polling. A receive will wait up till this
+     * long to get a request before returning a possibly empty request.
+     * Maximum value is 20s
+     * @param waitTime
+     */
+    public void setWaitTime(long waitTime) {
+        this.waitTime = waitTime;
+    }
+    
+    /**
      * The TaskProcessor which handles the actual work
      */
     public void setTaskProcessor(TaskProcessor processor) {
@@ -124,6 +135,7 @@ public class QueueManager extends ComponentBase implements Startup {
                 ReceiveMessageRequest receiveMessageRequest = new ReceiveMessageRequest(queueURL);
                 receiveMessageRequest.setMessageAttributeNames(Collections.singleton("All"));
                 receiveMessageRequest.setVisibilityTimeout( (int)pollTime );
+                receiveMessageRequest.setWaitTimeSeconds( (int)waitTime );
                 List<Message> messages = sqs.receiveMessage(receiveMessageRequest).getMessages();
                 
                 boolean putBackSome = false;
@@ -146,7 +158,7 @@ public class QueueManager extends ComponentBase implements Startup {
                 }
                 if (putBackSome) {
                     try {
-                        // We've reject some requests so give others a chance to pick them up
+                        // We've rejected some requests so give others a chance to pick them up
                         Thread.sleep( (pollTime + 3) * 1000 );
                     } catch (InterruptedException e) {
                         // Fall back to the outer loop
